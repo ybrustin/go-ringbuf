@@ -11,9 +11,9 @@ type orbuf[T any] struct {
 	ringBuf[T]
 }
 
-func (rb *orbuf[T]) Put(item T) (err error) { return rb.Enqueue(item) } //nolint:revive
+func (rb *orbuf[T]) Put(item *T) (err error) { return rb.Enqueue(item) } //nolint:revive
 
-func (rb *orbuf[T]) Enqueue(item T) (err error) { //nolint:revive
+func (rb *orbuf[T]) Enqueue(item *T) (err error) { //nolint:revive
 	var tail, head, nt, nh uint32
 	var holder *rbItem[T]
 	for {
@@ -47,7 +47,7 @@ func (rb *orbuf[T]) Enqueue(item T) (err error) { //nolint:revive
 		}
 
 		if rb.initializer != nil {
-			rb.initializer.CloneIn(item, &holder.value)
+			rb.initializer.CloneIn(item, holder.value)
 		} else {
 			holder.value = item
 		}
@@ -65,9 +65,9 @@ func (rb *orbuf[T]) Enqueue(item T) (err error) { //nolint:revive
 	}
 }
 
-func (rb *orbuf[T]) Get() (item T, err error) { return rb.Dequeue() } //nolint:revive
+func (rb *orbuf[T]) Get() (item *T, err error) { return rb.Dequeue() } //nolint:revive
 
-func (rb *orbuf[T]) Dequeue() (item T, err error) { //nolint:revive
+func (rb *orbuf[T]) Dequeue() (item *T, err error) { //nolint:revive
 	var tail, head, nh uint32
 	var holder *rbItem[T]
 	for {
@@ -102,7 +102,7 @@ func (rb *orbuf[T]) Dequeue() (item T, err error) { //nolint:revive
 		}
 
 		if rb.initializer != nil {
-			item = rb.initializer.CloneOut(&holder.value)
+			item = rb.initializer.CloneOut(holder.value)
 		} else {
 			item = holder.value
 			// holder.value = zero

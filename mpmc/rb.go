@@ -116,14 +116,14 @@ type ringBuf[T any] struct {
 
 type rbItem[T any] struct {
 	readWrite uint64 // 0: writable, 1: readable, 2: write ok, 3: read ok
-	value     T      // ptr
+	value     *T     // ptr
 	_         [CacheLinePadSize - 8 - 8]byte
 	// _         cpu.CacheLinePad
 }
 
-func (rb *ringBuf[T]) Put(item T) (err error) { return rb.Enqueue(item) } //nolint:revive
+func (rb *ringBuf[T]) Put(item *T) (err error) { return rb.Enqueue(item) } //nolint:revive
 
-func (rb *ringBuf[T]) Enqueue(item T) (err error) { //nolint:revive
+func (rb *ringBuf[T]) Enqueue(item *T) (err error) { //nolint:revive
 	var tail, head, nt uint32
 	var holder *rbItem[T]
 	for {
@@ -155,7 +155,7 @@ func (rb *ringBuf[T]) Enqueue(item T) (err error) { //nolint:revive
 		}
 
 		if rb.initializer != nil {
-			rb.initializer.CloneIn(item, &holder.value)
+			rb.initializer.CloneIn(item, holder.value)
 		} else {
 			holder.value = item
 		}
@@ -173,9 +173,9 @@ func (rb *ringBuf[T]) Enqueue(item T) (err error) { //nolint:revive
 	}
 }
 
-func (rb *ringBuf[T]) Get() (item T, err error) { return rb.Dequeue() } //nolint:revive
+func (rb *ringBuf[T]) Get() (item *T, err error) { return rb.Dequeue() } //nolint:revive
 
-func (rb *ringBuf[T]) Dequeue() (item T, err error) { //nolint:revive
+func (rb *ringBuf[T]) Dequeue() (item *T, err error) { //nolint:revive
 	var tail, head, nh uint32
 	var holder *rbItem[T]
 	for {
@@ -210,7 +210,7 @@ func (rb *ringBuf[T]) Dequeue() (item T, err error) { //nolint:revive
 		}
 
 		if rb.initializer != nil {
-			item = rb.initializer.CloneOut(&holder.value)
+			item = rb.initializer.CloneOut(holder.value)
 		} else {
 			item = holder.value
 			// holder.value = zero
