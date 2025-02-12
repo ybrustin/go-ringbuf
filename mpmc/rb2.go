@@ -105,7 +105,7 @@ func (rb *orbuf[T]) Dequeue() (item *T, err error) { //nolint:revive
 			item = rb.initializer.CloneOut(holder.value)
 		} else {
 			item = holder.value
-			// holder.value = zero
+			holder.value = nil
 		}
 		if !atomic.CompareAndSwapUint64(&holder.readWrite, 3, 0) { //nolint:gomnd
 			err = ErrRaced // runtime.Gosched() // never happens
